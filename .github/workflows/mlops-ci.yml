@@ -1,0 +1,62 @@
+name: MLOps CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - dev
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Récupérer le code du dépôt
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2) Installer Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 3) Créer et activer un environnement virtuel
+      - name: Set up virtual environment
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4) Formatage du code (black)
+      - name: Format code
+        run: |
+          source .venv/bin/activate
+          make format
+
+      # 5) Lint (flake8)
+      - name: Lint code
+        run: |
+          source .venv/bin/activate
+          make lint
+
+      # 6) Sécurité (bandit)
+      - name: Security checks
+        run: |
+          source .venv/bin/activate
+          make security
+
+      # 7) Tests unitaires (pytest)
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          make test
+
+      # 8) Entraînement du modèle (train)
+      - name: Train model
+        run: |
+          source .venv/bin/activate
+          make train

@@ -1,0 +1,16 @@
+# Virtual env
+.venv/
+
+# Python caches
+__pycache__/
+*.pyc
+
+# pytest cache
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Models
+*.joblib
