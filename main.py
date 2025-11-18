@@ -82,7 +82,7 @@ def main():
         evaluate_model(model, X_test, y_test)
 
     else:
-        print("Étape inconnue.")
+        print("Étape inconnueee.")
         print("Utilisation :")
         print("  python3 main.py prepare")
         print("  python3 main.py train")
