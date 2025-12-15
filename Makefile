@@ -41,4 +41,20 @@ test:
 
 ci: format lint security test train
 
-all: install ci
+all: install ci 
+api:
+	.venv/bin/uvicorn app:app --reload --host 0.0.0.0 --port 8000
+docker-build:
+	docker build -t prenom_nom_classe_mlops .
+
+docker-run:
+	docker run -p 8000:8000 prenom_nom_classe_mlops
+
+docker-login:
+	docker login
+
+docker-tag:
+	docker tag prenom_nom_classe_mlops TON_DOCKERHUB/pre_nom_classe_mlops
+
+docker-push:
+	docker push TON_DOCKERHUB/pre_nom_classe_mlops

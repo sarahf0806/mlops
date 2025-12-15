@@ -1,0 +1,10 @@
+artifact_location: file:///mnt/c/Users/saraf/Desktop/mlops/mlruns/0/models/m-874d0d2f33714c92a9b61307de037d40/artifacts
+creation_timestamp: 1764687300152
+experiment_id: '0'
+last_updated_timestamp: 1764687375092
+model_id: m-874d0d2f33714c92a9b61307de037d40
+model_type: null
+name: RandomForestModel
+source_run_id: 07800a7747b340098ae2dcf8683a2a40
+status: 2
+status_message: null

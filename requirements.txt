@@ -6,3 +6,8 @@ black
 flake8
 bandit
 pytest
+fastapi
+uvicorn
+
+mlflow
+pydantic

@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/869955395382932615/a31d74fb03c942ba85d6f0f78658fc18/artifacts
+end_time: 1765291624784
+entry_point_name: ''
+experiment_id: '869955395382932615'
+lifecycle_stage: active
+run_id: a31d74fb03c942ba85d6f0f78658fc18
+run_name: mysterious-squid-193
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765291624102
+status: 4
+tags: []
+user_id: saraf

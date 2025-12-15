@@ -1,0 +1,14 @@
+artifact_uri: file:///mnt/c/Users/saraf/Desktop/mlops/mlruns/0/2c8033d78fb7408f949d41771e74a235/artifacts
+end_time: 1765293363085
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 2c8033d78fb7408f949d41771e74a235
+run_name: puzzled-bird-585
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765293292474
+status: 3
+tags: []
+user_id: saraf

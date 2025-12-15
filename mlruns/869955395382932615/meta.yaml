@@ -1,0 +1,6 @@
+artifact_location: mlflow-artifacts:/869955395382932615
+creation_time: 1764687711818
+experiment_id: '869955395382932615'
+last_update_time: 1764687711818
+lifecycle_stage: active
+name: WaterPotability-RF

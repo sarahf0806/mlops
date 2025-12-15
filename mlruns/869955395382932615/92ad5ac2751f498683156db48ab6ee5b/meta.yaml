@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/869955395382932615/92ad5ac2751f498683156db48ab6ee5b/artifacts
+end_time: 1765292074069
+entry_point_name: ''
+experiment_id: '869955395382932615'
+lifecycle_stage: active
+run_id: 92ad5ac2751f498683156db48ab6ee5b
+run_name: abundant-colt-988
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765292071116
+status: 3
+tags: []
+user_id: saraf

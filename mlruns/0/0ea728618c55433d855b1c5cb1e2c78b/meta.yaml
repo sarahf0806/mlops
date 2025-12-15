@@ -1,0 +1,14 @@
+artifact_uri: file:///mnt/c/Users/saraf/Desktop/mlops/mlruns/0/0ea728618c55433d855b1c5cb1e2c78b/artifacts
+end_time: 1765293363861
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 0ea728618c55433d855b1c5cb1e2c78b
+run_name: carefree-ram-521
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765293363273
+status: 3
+tags: []
+user_id: saraf

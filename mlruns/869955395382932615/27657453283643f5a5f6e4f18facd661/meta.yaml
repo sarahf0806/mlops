@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/869955395382932615/27657453283643f5a5f6e4f18facd661/artifacts
+end_time: 1764687715322
+entry_point_name: ''
+experiment_id: '869955395382932615'
+lifecycle_stage: active
+run_id: 27657453283643f5a5f6e4f18facd661
+run_name: luxuriant-donkey-430
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1764687713927
+status: 4
+tags: []
+user_id: saraf

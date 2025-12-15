@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/869955395382932615/e1d9c715ff91495ba09c4eb5e671a4ff/artifacts
+end_time: 1765288478164
+entry_point_name: ''
+experiment_id: '869955395382932615'
+lifecycle_stage: active
+run_id: e1d9c715ff91495ba09c4eb5e671a4ff
+run_name: calm-bear-720
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765288476501
+status: 4
+tags: []
+user_id: saraf

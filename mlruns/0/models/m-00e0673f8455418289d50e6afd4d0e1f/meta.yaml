@@ -1,0 +1,10 @@
+artifact_location: file:///mnt/c/Users/saraf/Desktop/mlops/mlruns/0/models/m-00e0673f8455418289d50e6afd4d0e1f/artifacts
+creation_timestamp: 1765293295729
+experiment_id: '0'
+last_updated_timestamp: 1765293362906
+model_id: m-00e0673f8455418289d50e6afd4d0e1f
+model_type: null
+name: model
+source_run_id: 2c8033d78fb7408f949d41771e74a235
+status: 2
+status_message: null

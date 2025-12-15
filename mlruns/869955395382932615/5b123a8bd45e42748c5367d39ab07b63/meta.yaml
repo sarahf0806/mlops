@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/869955395382932615/5b123a8bd45e42748c5367d39ab07b63/artifacts
+end_time: 1765288955015
+entry_point_name: ''
+experiment_id: '869955395382932615'
+lifecycle_stage: active
+run_id: 5b123a8bd45e42748c5367d39ab07b63
+run_name: agreeable-stoat-167
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1765288953276
+status: 4
+tags: []
+user_id: saraf

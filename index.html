@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Water Potability Checker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #e6f4ff;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .container {
+      margin: 40px 16px;
+      max-width: 900px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      padding: 32px 40px 40px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo {
+      font-size: 32px;
+      margin-bottom: 4px;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1554b3;
+      margin: 4px 0;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #4f4f4f;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px 24px;
+      margin-top: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #333;
+    }
+
+    .field span.hint {
+      font-size: 11px;
+      color: #777;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d0d7e2;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .field input:focus {
+      border-color: #1f6feb;
+      box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.18);
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.15s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #0084ff, #00b4ff);
+      box-shadow: 0 6px 16px rgba(0, 132, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(90deg, #6f3ff2, #b03fff);
+      box-shadow: 0 6px 16px rgba(111, 63, 242, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: wait;
+      box-shadow: none;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      background: #f3f6ff;
+      border: 1px solid #d2dcff;
+      display: none;
+    }
+
+    .result span.label {
+      font-weight: 600;
+    }
+
+    .result.positive {
+      border-color: #23b26b;
+      background: #e6f8f0;
+      color: #12633d;
+    }
+
+    .result.negative {
+      border-color: #f55b5b;
+      background: #ffecec;
+      color: #8a1f1f;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #555;
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        padding: 24px 20px 28px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">💧</div>
+      <div class="title">Water Potability Checker</div>
+      <div class="subtitle">Vérifiez la potabilité de votre eau </div>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <label>pH <span class="hint">(0–14)</span></label>
+        <input id="ph" type="number" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Dureté (mg/L) <span class="hint">(0–500)</span></label>
+        <input id="Hardness" type="number" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Solides dissous (ppm) <span class="hint">(0–50000)</span></label>
+        <input id="Solids" type="number" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Chloramines (ppm) <span class="hint">(0–4)</span></label>
+        <input id="Chloramines" type="number" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Sulfate (mg/L) <span class="hint">(0–400)</span></label>
+        <input id="Sulfate" type="number" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Conductivité (µS/cm) <span class="hint">(0–2000)</span></label>
+        <input id="Conductivity" type="number" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Carbone organique (mg/L) <span class="hint">(0–28)</span></label>
+        <input id="Organic_carbon" type="number" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Trihalométhanes (µg/L) <span class="hint">(0–120)</span></label>
+        <input id="Trihalomethanes" type="number" step="0.01" />
+      </div>
+      <div class="field">
+        <label>Turbidité (NTU) <span class="hint">(0–6)</span></label>
+        <input id="Turbidity" type="number" step="0.01" />
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button id="btnPredict" class="btn btn-primary">
+        💧 Analyser l'eau
+      </button>
+      <button id="btnRetrain" class="btn btn-secondary">
+        ⚙️ Réentraîner le modèle
+      </button>
+    </div>
+
+    <div id="result" class="result">
+      <span class="label"></span>
+      <span class="text"></span>
+    </div>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script>
+    const btnPredict = document.getElementById("btnPredict");
+    const btnRetrain = document.getElementById("btnRetrain");
+    const resultBox = document.getElementById("result");
+    const resultLabel = resultBox.querySelector(".label");
+    const resultText = resultBox.querySelector(".text");
+    const statusText = document.getElementById("status");
+
+    function getValue(id) {
+      const v = document.getElementById(id).value;
+      return v === "" ? null : parseFloat(v);
+    }
+
+    function setLoading(isLoading) {
+      btnPredict.disabled = isLoading;
+      btnRetrain.disabled = isLoading;
+    }
+
+    function showResult(label, text, positive) {
+      resultBox.style.display = "block";
+      resultLabel.textContent = label + " ";
+      resultText.textContent = text || "";
+
+      resultBox.classList.remove("positive", "negative");
+      if (positive === true) resultBox.classList.add("positive");
+      if (positive === false) resultBox.classList.add("negative");
+    }
+
+    btnPredict.addEventListener("click", async () => {
+      setLoading(true);
+      statusText.textContent = "Envoi de la requête de prédiction...";
+
+      const payload = {
+        ph: getValue("ph"),
+        Hardness: getValue("Hardness"),
+        Solids: getValue("Solids"),
+        Chloramines: getValue("Chloramines"),
+        Sulfate: getValue("Sulfate"),
+        Conductivity: getValue("Conductivity"),
+        Organic_carbon: getValue("Organic_carbon"),
+        Trihalomethanes: getValue("Trihalomethanes"),
+        Turbidity: getValue("Turbidity")
+      };
+
+      try {
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || "Erreur côté serveur");
+        }
+
+        const data = await res.json();
+        const potable = data.prediction === 1;
+
+        showResult(
+          potable ? "✅ Eau potable." : "🚫 Eau non potable.",
+          "",
+          potable
+        );
+        statusText.textContent = "Prédiction terminée avec succès.";
+      } catch (e) {
+        showResult("Erreur", e.message || "Erreur inconnue 😵", false);
+        statusText.textContent = "La requête a échoué.";
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    btnRetrain.addEventListener("click", async () => {
+      setLoading(true);
+      statusText.textContent = "Réentraînement du modèle en cours...";
+
+      // Adapter ce payload à la signature réelle de ton /retrain.
+      const payload = {
+        n_estimators: 500,
+        max_depth: 20,
+        random_state: 42
+      };
+
+      try {
+        const res = await fetch("/retrain", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || "Erreur côté serveur");
+        }
+
+        const data = await res.json();
+        const acc = (data.new_accuracy * 100).toFixed(2);
+
+        showResult(
+          "⚙️ Modèle réentraîné.",
+          `Nouvelle accuracy : ${acc} %`,
+          true
+        );
+        statusText.textContent = "Réentraînement terminé.";
+      } catch (e) {
+        showResult("Erreur", e.message || "Erreur inconnue 😵", false);
+        statusText.textContent = "Le réentraînement a échoué.";
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>
