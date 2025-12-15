@@ -39,7 +39,8 @@ evaluate:
 test:
 	$(PYTHON) -m pytest
 
-ci: format lint security test train
+ci: format lint security test
+
 
 all: install ci 
 api:
