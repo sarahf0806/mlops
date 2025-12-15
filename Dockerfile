@@ -8,7 +8,12 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Installer les dépendances
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir \
+    --default-timeout=120 \
+    --index-url https://pypi.org/simple \
+    -r requirements.txt
+
 
 # Copier tout le projet dans l'image
 COPY . .

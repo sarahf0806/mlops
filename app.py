@@ -1,113 +1,130 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import numpy as np
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, Field
+import pandas as pd
 
 from model_pipeline import load_model, retrain_and_save
-from fastapi.responses import FileResponse
 
 MODEL_PATH = "rf_model.joblib"
 
-
+# =============================
+# Modèles Pydantic (VALIDATION)
+# =============================
 class WaterSample(BaseModel):
-    """Données d'entrée pour une observation (1 ligne du dataset)."""
-
-    ph: float
-    Hardness: float
-    Solids: float
-    Chloramines: float
-    Sulfate: float
-    Conductivity: float
-    Organic_carbon: float
-    Trihalomethanes: float
-    Turbidity: float
+    ph: float = Field(..., ge=0, le=14)
+    Hardness: float = Field(..., ge=0, le=500)
+    Solids: float = Field(..., ge=0, le=50000)
+    Chloramines: float = Field(..., ge=0, le=4)
+    Sulfate: float = Field(..., ge=0, le=400)
+    Conductivity: float = Field(..., ge=0, le=2000)
+    Organic_carbon: float = Field(..., ge=0, le=28)
+    Trihalomethanes: float = Field(..., ge=0, le=120)
+    Turbidity: float = Field(..., ge=0, le=6)
 
 
 class RetrainParams(BaseModel):
-    """Hyperparamètres pour le ré-entraînement du RandomForest."""
-
-    n_estimators: int = 300
-    max_depth: int | None = None
+    n_estimators: int = Field(300, ge=10, le=2000)
+    max_depth: int | None = Field(None, ge=1, le=100)
     random_state: int = 42
 
 
+# =============================
+# Application FastAPI
+# =============================
 app = FastAPI(
     title="Water Potability API",
     description="API FastAPI pour prédire la potabilité de l'eau et réentraîner un RandomForest.",
     version="1.0.0",
 )
 
-model = None  # sera chargé au démarrage
+model = None
 
 
+# =============================
+# Startup
+# =============================
 @app.on_event("startup")
 def startup_event():
-    """Chargement du modèle au lancement du serveur."""
     global model
     try:
         model = load_model(MODEL_PATH)
         print(f"✅ Modèle chargé depuis {MODEL_PATH}")
     except Exception as e:
-        print(f"❌ Erreur de chargement du modèle : {e}")
+        print(f"❌ Modèle non chargé : {e}")
         model = None
 
 
+# =============================
+# Routes
+# =============================
 @app.get("/")
 def root():
     return {
         "message": "Water Potability API is running.",
-        "endpoints": {
-            "docs": "/docs",
-            "predict": "/predict (POST)",
-            "retrain": "/retrain (POST)",
-        },
+        "endpoints": ["/docs", "/predict", "/retrain", "/ui"],
     }
 
 
 @app.post("/predict")
 def predict_potability(sample: WaterSample):
-    """
-    Prédit si l'eau est potable (1) ou non potable (0)
-    à partir des caractéristiques envoyées.
-    """
     if model is None:
         raise HTTPException(status_code=500, detail="Modèle non chargé côté serveur.")
 
+    # 🔒 RÈGLES MÉTIER OMS (AVANT ML)
+    if sample.ph < 6.5 or sample.ph > 8.5:
+        return {
+            "prediction": 0,
+            "label": "non potable",
+            "reason": "pH hors normes OMS (6.5 – 8.5)",
+        }
+
+    if sample.Turbidity > 1:
+        return {
+            "prediction": 0,
+            "label": "non potable",
+            "reason": "Turbidité trop élevée (> 1 NTU)",
+        }
+
+    # ✅ Création DataFrame avec noms de features
+    df = pd.DataFrame(
+        [[
+            sample.ph,
+            sample.Hardness,
+            sample.Solids,
+            sample.Chloramines,
+            sample.Sulfate,
+            sample.Conductivity,
+            sample.Organic_carbon,
+            sample.Trihalomethanes,
+            sample.Turbidity,
+        ]],
+        columns=[
+            "ph",
+            "Hardness",
+            "Solids",
+            "Chloramines",
+            "Sulfate",
+            "Conductivity",
+            "Organic_carbon",
+            "Trihalomethanes",
+            "Turbidity",
+        ],
+    )
+
     try:
-        data = np.array(
-            [
-                [
-                    sample.ph,
-                    sample.Hardness,
-                    sample.Solids,
-                    sample.Chloramines,
-                    sample.Sulfate,
-                    sample.Conductivity,
-                    sample.Organic_carbon,
-                    sample.Trihalomethanes,
-                    sample.Turbidity,
-                ]
-            ]
-        )
-
-        pred = model.predict(data)[0]
-        pred_int = int(pred)
-        label = "potable" if pred_int == 1 else "non potable"
-
-        return {"prediction": pred_int, "label": label}
-
+        pred = int(model.predict(df)[0])
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erreur pendant la prédiction : {e}",
-        )
+        raise HTTPException(status_code=500, detail=f"Erreur de prédiction : {e}")
+
+    return {
+        "prediction": pred,
+        "label": "potable" if pred == 1 else "non potable",
+    }
 
 
 @app.post("/retrain")
 def retrain_model(params: RetrainParams):
-    """
-    Réentraîne le modèle RandomForest avec les paramètres fournis.
-    Sauvegarde le nouveau modèle et recharge le modèle en mémoire.
-    """
     global model
     try:
         model, (X_test, y_test) = retrain_and_save(
@@ -118,22 +135,30 @@ def retrain_model(params: RetrainParams):
             model_path=MODEL_PATH,
         )
 
-        # petite évaluation rapide
-        y_pred = model.predict(X_test)
-        accuracy = float((y_pred == y_test).mean())
+        accuracy = float((model.predict(X_test) == y_test).mean())
 
         return {
             "status": "success",
-            "message": "Modèle ré-entraîné et rechargé.",
             "new_accuracy": accuracy,
-            "parameters_used": params.dict(),
+            "parameters_used": params.model_dump(),
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erreur pendant le réentraînement : {e}",
-        )
+        raise HTTPException(status_code=500, detail=f"Erreur ré-entraînement : {e}")
+
+
 @app.get("/ui", response_class=FileResponse)
 def get_ui():
     return FileResponse("index.html")
+
+
+# =============================
+# Gestion erreurs validation
+# =============================
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = [
+        {"field": err["loc"][-1], "message": err["msg"]}
+        for err in exc.errors()
+    ]
+    return JSONResponse(status_code=422, content={"errors": errors})

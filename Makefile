@@ -44,17 +44,30 @@ ci: format lint security test train
 all: install ci 
 api:
 	.venv/bin/uvicorn app:app --reload --host 0.0.0.0 --port 8000
+# ======================
+# Variables Docker
+# ======================
+IMAGE_NAME = sarah_mlops
+DOCKERHUB_USER = sriserml
+CONTAINER_NAME = sarah_mlops_container
+PORT = 8000
+
+# ======================
+# Docker
+# ======================
 docker-build:
-	docker build -t prenom_nom_classe_mlops .
+	docker build -t $(IMAGE_NAME) .
 
 docker-run:
-	docker run -p 8000:8000 prenom_nom_classe_mlops
+	docker run -p $(PORT):8000 $(IMAGE_NAME)
 
 docker-login:
 	docker login
 
 docker-tag:
-	docker tag prenom_nom_classe_mlops TON_DOCKERHUB/pre_nom_classe_mlops
+	docker tag $(IMAGE_NAME) $(DOCKERHUB_USER)/$(IMAGE_NAME):latest
 
 docker-push:
-	docker push TON_DOCKERHUB/pre_nom_classe_mlops
+	docker push $(DOCKERHUB_USER)/$(IMAGE_NAME):latest
+
+docker-all: docker-build docker-tag docker-push

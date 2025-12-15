@@ -12,7 +12,9 @@ from sklearn.metrics import accuracy_score, classification_report
 import mlflow
 import mlflow.sklearn
 
-# On force MLflow à utiliser la base SQLite locale
+# =============================
+# Configuration MLflow
+# =============================
 mlflow.set_tracking_uri("sqlite:///mlflow.db")
 mlflow.set_experiment("WaterPotability")
 
@@ -20,14 +22,17 @@ mlflow.set_experiment("WaterPotability")
 # =============================
 # 1. Préparation des données
 # =============================
-def prepare_data(csv_path: str = "water_potability.csv",
-                 test_size: float = 0.2,
-                 random_state: int = 42):
+def prepare_data(
+    csv_path: str = "water_potability.csv",
+    test_size: float = 0.2,
+    random_state: int = 42,
+):
     """
     Charge le CSV, gère les valeurs manquantes et fait le split train/test.
     """
-
     df = pd.read_csv(csv_path)
+
+    # Remplacer ph = 0 par NaN
     df["ph"] = df["ph"].replace(0, np.nan)
 
     imputer = SimpleImputer(strategy="median")
@@ -40,17 +45,18 @@ def prepare_data(csv_path: str = "water_potability.csv",
 
 
 # =============================
-# 2. Entraînement du modèle + MLflow
+# 2. Entraînement du modèle
 # =============================
-def train_model(X_train,
-                y_train,
-                n_estimators: int = 300,
-                max_depth=None,
-                random_state: int = 42):
+def train_model(
+    X_train,
+    y_train,
+    n_estimators: int = 300,
+    max_depth=None,
+    random_state: int = 42,
+):
     """
-    Entraîne un RandomForest et log tout dans MLflow (run + params + métriques + modèle).
+    Entraîne un RandomForest et log les infos dans MLflow.
     """
-
     with mlflow.start_run():
         mlflow.log_param("n_estimators", n_estimators)
         mlflow.log_param("max_depth", max_depth)
@@ -59,20 +65,24 @@ def train_model(X_train,
         model = RandomForestClassifier(
             n_estimators=n_estimators,
             max_depth=max_depth,
-            random_state=random_state
+            random_state=random_state,
         )
 
         model.fit(X_train, y_train)
 
-        # accuracy train
         train_pred = model.predict(X_train)
         train_acc = accuracy_score(y_train, train_pred)
+
         mlflow.log_metric("train_accuracy", train_acc)
 
-        # log modèle dans MLflow
-        mlflow.sklearn.log_model(model, "model")
+        # Log du modèle avec input_example pour éviter les warnings MLflow
+        mlflow.sklearn.log_model(
+            model,
+            name="model",
+            input_example=X_train.iloc[:5],
+        )
 
-        print(f"[MLflow] train_accuracy = {train_acc}")
+        print(f"[MLflow] train_accuracy = {train_acc:.4f}")
 
         return model
 
@@ -82,9 +92,8 @@ def train_model(X_train,
 # =============================
 def evaluate_model(model, X_test, y_test):
     """
-    Affiche le rapport + log l'accuracy test dans MLflow (si un run est actif).
+    Évalue le modèle et log l'accuracy test si un run MLflow est actif.
     """
-
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
 
@@ -94,28 +103,26 @@ def evaluate_model(model, X_test, y_test):
 
     try:
         mlflow.log_metric("test_accuracy", acc)
-    except Exception:
-        # Si on évalue en dehors d'un run MLflow (cas main.py evaluate), on ignore.
-        pass
+    except Exception as e:
+        print(f"[MLflow] Metric logging skipped: {e}")
 
     return acc
 
 
 # =============================
-# 4. Sauvegarde modèle disque
+# 4. Sauvegarde modèle
 # =============================
 def save_model(model, path: str = "rf_model.joblib"):
     """
-    Sauvegarde le modèle au format joblib et essaie de le log en artefact MLflow.
+    Sauvegarde le modèle sur disque et tente un log MLflow.
     """
     joblib.dump(model, path)
     print(f"Modèle sauvegardé dans : {path}")
 
     try:
         mlflow.log_artifact(path)
-    except Exception:
-        # Si pas de run actif, on ignore.
-        pass
+    except Exception as e:
+        print(f"[MLflow] Artifact logging skipped: {e}")
 
 
 # =============================
@@ -132,7 +139,7 @@ def load_model(path: str = "rf_model.joblib"):
 
 
 # =============================
-# 6. Réentraînement + sauvegarde (utilisé par l'API FastAPI)
+# 6. Réentraînement + sauvegarde
 # =============================
 def retrain_and_save(
     data_path: str = "water_potability.csv",
@@ -142,14 +149,10 @@ def retrain_and_save(
     model_path: str = "rf_model.joblib",
 ):
     """
-    Réentraîne un RandomForest avec les hyperparamètres fournis,
-    log dans MLflow, sauvegarde le modèle sur disque et retourne
-    (model, (X_test, y_test)) pour que l'API puisse calculer une accuracy.
+    Réentraîne le modèle, log MLflow, sauvegarde et retourne le modèle + données test.
     """
-
     X_train, X_test, y_train, y_test = prepare_data(data_path)
 
-    # On réutilise train_model => crée un run MLflow avec les bons params
     model = train_model(
         X_train,
         y_train,
@@ -158,7 +161,6 @@ def retrain_and_save(
         random_state=random_state,
     )
 
-    # On sauvegarde sur disque (et potentiellement en artefact MLflow)
     save_model(model, model_path)
 
     return model, (X_test, y_test)

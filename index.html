@@ -237,117 +237,95 @@
   </div>
 
   <script>
-    const btnPredict = document.getElementById("btnPredict");
-    const btnRetrain = document.getElementById("btnRetrain");
-    const resultBox = document.getElementById("result");
-    const resultLabel = resultBox.querySelector(".label");
-    const resultText = resultBox.querySelector(".text");
-    const statusText = document.getElementById("status");
+  const btnPredict = document.getElementById("btnPredict");
+  const btnRetrain = document.getElementById("btnRetrain");
+  const resultBox = document.getElementById("result");
+  const resultLabel = resultBox.querySelector(".label");
+  const resultText = resultBox.querySelector(".text");
+  const statusText = document.getElementById("status");
 
-    function getValue(id) {
-      const v = document.getElementById(id).value;
-      return v === "" ? null : parseFloat(v);
-    }
+  function getValue(id) {
+    const v = document.getElementById(id).value;
+    return v === "" ? null : Number(v);
+  }
 
-    function setLoading(isLoading) {
-      btnPredict.disabled = isLoading;
-      btnRetrain.disabled = isLoading;
-    }
+  function setLoading(isLoading) {
+    btnPredict.disabled = isLoading;
+    btnRetrain.disabled = isLoading;
+  }
 
-    function showResult(label, text, positive) {
-      resultBox.style.display = "block";
-      resultLabel.textContent = label + " ";
-      resultText.textContent = text || "";
+  function showResult(label, text, positive) {
+    resultBox.style.display = "block";
+    resultLabel.textContent = label;
+    resultText.textContent = text || "";
 
-      resultBox.classList.remove("positive", "negative");
-      if (positive === true) resultBox.classList.add("positive");
-      if (positive === false) resultBox.classList.add("negative");
-    }
+    resultBox.classList.remove("positive", "negative");
+    if (positive === true) resultBox.classList.add("positive");
+    if (positive === false) resultBox.classList.add("negative");
+  }
 
-    btnPredict.addEventListener("click", async () => {
-      setLoading(true);
-      statusText.textContent = "Envoi de la requête de prédiction...";
+  function formatFastApiErrors(detail) {
+    if (!Array.isArray(detail)) return "Erreur serveur";
 
-      const payload = {
-        ph: getValue("ph"),
-        Hardness: getValue("Hardness"),
-        Solids: getValue("Solids"),
-        Chloramines: getValue("Chloramines"),
-        Sulfate: getValue("Sulfate"),
-        Conductivity: getValue("Conductivity"),
-        Organic_carbon: getValue("Organic_carbon"),
-        Trihalomethanes: getValue("Trihalomethanes"),
-        Turbidity: getValue("Turbidity")
-      };
+    return detail
+      .map(err => {
+        const field = err.loc?.slice(-1)[0] || "champ";
+        return `${field} : ${err.msg}`;
+      })
+      .join(" • ");
+  }
 
-      try {
-        const res = await fetch("/predict", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+  btnPredict.addEventListener("click", async () => {
+    setLoading(true);
+    statusText.textContent = "Analyse de l’eau en cours…";
 
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.detail || "Erreur côté serveur");
-        }
+    const payload = {
+      ph: getValue("ph"),
+      Hardness: getValue("Hardness"),
+      Solids: getValue("Solids"),
+      Chloramines: getValue("Chloramines"),
+      Sulfate: getValue("Sulfate"),
+      Conductivity: getValue("Conductivity"),
+      Organic_carbon: getValue("Organic_carbon"),
+      Trihalomethanes: getValue("Trihalomethanes"),
+      Turbidity: getValue("Turbidity")
+    };
 
-        const data = await res.json();
-        const potable = data.prediction === 1;
+    try {
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-        showResult(
-          potable ? "✅ Eau potable." : "🚫 Eau non potable.",
-          "",
-          potable
-        );
-        statusText.textContent = "Prédiction terminée avec succès.";
-      } catch (e) {
-        showResult("Erreur", e.message || "Erreur inconnue 😵", false);
-        statusText.textContent = "La requête a échoué.";
-      } finally {
-        setLoading(false);
+      const data = await res.json();
+
+      if (!res.ok) {
+        const message = formatFastApiErrors(data.detail);
+        throw new Error(message);
       }
-    });
 
-    btnRetrain.addEventListener("click", async () => {
-      setLoading(true);
-      statusText.textContent = "Réentraînement du modèle en cours...";
+      const potable = data.prediction === 1;
 
-      // Adapter ce payload à la signature réelle de ton /retrain.
-      const payload = {
-        n_estimators: 500,
-        max_depth: 20,
-        random_state: 42
-      };
+      showResult(
+        potable ? "✅ Eau potable" : "🚫 Eau non potable",
+        "",
+        potable
+      );
 
-      try {
-        const res = await fetch("/retrain", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+      statusText.textContent = "Prédiction terminée avec succès.";
+    } catch (e) {
+      showResult(
+        "❌ Erreur de prédiction",
+        e.message,
+        false
+      );
+      statusText.textContent = "La prédiction a échoué.";
+    } finally {
+      setLoading(false);
+    }
+  });
+</script>
 
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.detail || "Erreur côté serveur");
-        }
-
-        const data = await res.json();
-        const acc = (data.new_accuracy * 100).toFixed(2);
-
-        showResult(
-          "⚙️ Modèle réentraîné.",
-          `Nouvelle accuracy : ${acc} %`,
-          true
-        );
-        statusText.textContent = "Réentraînement terminé.";
-      } catch (e) {
-        showResult("Erreur", e.message || "Erreur inconnue 😵", false);
-        statusText.textContent = "Le réentraînement a échoué.";
-      } finally {
-        setLoading(false);
-      }
-    });
-  </script>
 </body>
 </html>
