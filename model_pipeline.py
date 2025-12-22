@@ -8,9 +8,12 @@ from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
-from monitoring import log_to_elasticsearch
+
 import mlflow
 import mlflow.sklearn
+
+from monitoring import log_to_elasticsearch
+
 
 # =============================
 # Configuration MLflow
@@ -55,27 +58,39 @@ def train_model(
     random_state: int = 42,
 ):
     """
-    Entraîne un RandomForest et log les infos dans MLflow.
+    Entraîne un RandomForest et log paramètres + métriques dans MLflow
+    et Elasticsearch.
     """
     with mlflow.start_run():
+        # Paramètres
         mlflow.log_param("n_estimators", n_estimators)
         mlflow.log_param("max_depth", max_depth)
         mlflow.log_param("random_state", random_state)
 
+        # Modèle
         model = RandomForestClassifier(
             n_estimators=n_estimators,
             max_depth=max_depth,
             random_state=random_state,
         )
-
         model.fit(X_train, y_train)
 
+        # Accuracy train
         train_pred = model.predict(X_train)
         train_acc = accuracy_score(y_train, train_pred)
 
         mlflow.log_metric("train_accuracy", train_acc)
 
-        # Log du modèle avec input_example pour éviter les warnings MLflow
+        # Log Elasticsearch (⚠️ ICI seulement)
+        run = mlflow.active_run()
+        if run:
+            log_to_elasticsearch(
+                run_id=run.info.run_id,
+                metric_name="train_accuracy",
+                value=train_acc,
+            )
+
+        # Log modèle MLflow
         mlflow.sklearn.log_model(
             model,
             name="model",
@@ -85,26 +100,19 @@ def train_model(
         print(f"[MLflow] train_accuracy = {train_acc:.4f}")
 
         return model
-run = mlflow.active_run()
 
-if run:
-    log_to_elasticsearch(
-        run_id=run.info.run_id,
-        metric_name="train_accuracy",
-        value=train_acc,
-    )
 
 # =============================
 # 3. Évaluation
 # =============================
 def evaluate_model(model, X_test, y_test):
     """
-    Évalue le modèle et log l'accuracy test si un run MLflow est actif.
+    Évalue le modèle et log l'accuracy test dans MLflow.
     """
     y_pred = model.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
 
-    print("\nAccuracy :", acc)
+    print("\nAccuracy test :", acc)
     print("\nClassification Report:\n")
     print(classification_report(y_test, y_pred))
 
@@ -156,7 +164,8 @@ def retrain_and_save(
     model_path: str = "rf_model.joblib",
 ):
     """
-    Réentraîne le modèle, log MLflow, sauvegarde et retourne le modèle + données test.
+    Réentraîne le modèle, log MLflow, sauvegarde et retourne le modèle
+    + données de test.
     """
     X_train, X_test, y_train, y_test = prepare_data(data_path)
 

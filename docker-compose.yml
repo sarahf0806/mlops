@@ -1,6 +1,7 @@
-version: "3.8"
-
 services:
+  # ============================
+  # Elasticsearch
+  # ============================
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
     container_name: elasticsearch
@@ -10,9 +11,14 @@ services:
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
     networks:
       - mlops-net
 
+  # ============================
+  # Kibana
+  # ============================
   kibana:
     image: docker.elastic.co/kibana/kibana:8.12.0
     container_name: kibana
@@ -20,10 +26,15 @@ services:
       - elasticsearch
     ports:
       - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     networks:
       - mlops-net
 
-  app:
+  # ============================
+  # ML API (Water Potability)
+  # ============================
+  water_potability_app:
     build: .
     container_name: water_potability_app
     ports:
@@ -32,12 +43,34 @@ services:
       - elasticsearch
     networks:
       - mlops-net
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
+  # ============================
+  # Filebeat (logs Docker)
+  # ============================
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.12.0
+    container_name: filebeat
+    user: root
+    depends_on:
+      - elasticsearch
+    volumes:
+      # 🔴 NE PAS TOUCHER : montages corrects
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: ["--strict.perms=false"]
+    networks:
+      - mlops-net
+
+# ============================
+# Volumes
+# ============================
+volumes:
+  es-data:
+
+# ============================
+# Network
+# ============================
 networks:
   mlops-net:
     driver: bridge

@@ -8,6 +8,7 @@ from model_pipeline import load_model, retrain_and_save
 
 MODEL_PATH = "rf_model.joblib"
 
+
 # =============================
 # Modèles Pydantic (VALIDATION)
 # =============================
@@ -88,17 +89,19 @@ def predict_potability(sample: WaterSample):
 
     # ✅ Création DataFrame avec noms de features
     df = pd.DataFrame(
-        [[
-            sample.ph,
-            sample.Hardness,
-            sample.Solids,
-            sample.Chloramines,
-            sample.Sulfate,
-            sample.Conductivity,
-            sample.Organic_carbon,
-            sample.Trihalomethanes,
-            sample.Turbidity,
-        ]],
+        [
+            [
+                sample.ph,
+                sample.Hardness,
+                sample.Solids,
+                sample.Chloramines,
+                sample.Sulfate,
+                sample.Conductivity,
+                sample.Organic_carbon,
+                sample.Trihalomethanes,
+                sample.Turbidity,
+            ]
+        ],
         columns=[
             "ph",
             "Hardness",
@@ -157,8 +160,5 @@ def get_ui():
 # =============================
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    errors = [
-        {"field": err["loc"][-1], "message": err["msg"]}
-        for err in exc.errors()
-    ]
+    errors = [{"field": err["loc"][-1], "message": err["msg"]} for err in exc.errors()]
     return JSONResponse(status_code=422, content={"errors": errors})

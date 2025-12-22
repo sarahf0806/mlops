@@ -8,7 +8,8 @@ bandit
 pytest
 fastapi
 uvicorn
-elasticsearch
+elasticsearch==8.12.0
+elastic-transport==8.17.1
 
 mlflow
 pydantic
