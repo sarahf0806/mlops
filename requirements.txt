@@ -8,6 +8,7 @@ bandit
 pytest
 fastapi
 uvicorn
+elasticsearch
 
 mlflow
 pydantic

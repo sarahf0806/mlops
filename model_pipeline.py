@@ -8,7 +8,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
-
+from monitoring import log_to_elasticsearch
 import mlflow
 import mlflow.sklearn
 
@@ -85,7 +85,14 @@ def train_model(
         print(f"[MLflow] train_accuracy = {train_acc:.4f}")
 
         return model
+run = mlflow.active_run()
 
+if run:
+    log_to_elasticsearch(
+        run_id=run.info.run_id,
+        metric_name="train_accuracy",
+        value=train_acc,
+    )
 
 # =============================
 # 3. Évaluation
